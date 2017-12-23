@@ -43,6 +43,12 @@
 		<!-- 指定Mybatis, Mapper文件的位置 -->
 		<property name="mapperLocations" value="classpath:mapper/*.xml"></property>
 	</bean>
+	
+	<!-- 配置一个可以批量操作的SQLsession -->
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory"/>
+		<constructor-arg name="executorType" value="BATCH"/>
+	</bean>
 
 	<!-- 配置扫描器，将mybatis接口的实现加入到Ioc容器中 -->
 	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
