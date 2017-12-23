@@ -9,7 +9,21 @@ public class Department {
         return deptId;
     }
 
-    public void setDeptId(Integer deptId) {
+    
+    
+    public Department() {
+		super();
+	}
+
+
+
+	public Department(Integer deptId, String deptName) {
+		super();
+		this.deptId = deptId;
+		this.deptName = deptName;
+	}
+
+	public void setDeptId(Integer deptId) {
         this.deptId = deptId;
     }
 

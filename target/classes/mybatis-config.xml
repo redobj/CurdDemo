@@ -8,6 +8,6 @@
   		<setting name="mapUnderscoreToCamelCase" value="true"/>
   	</settings>
   	<typeAliases>
-  		<package name="com.redobj.curd.bean"/>
+  		<package name="com.redobj.crud.bean"/>
   	</typeAliases>
   </configuration>
