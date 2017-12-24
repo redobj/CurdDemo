@@ -15,13 +15,19 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- 引入pageHelper -->
+		<dependency>
+			<groupId>com.github.pagehelper</groupId>
+			<artifactId>pagehelper</artifactId>
+			<version>5.0.0</version>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.springframework/spring-webmvc -->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-webmvc</artifactId>
 			<version>4.3.10.RELEASE</version>
 		</dependency>
-		
+
 		<!-- Spring单元测试 -->
 		<dependency>
 			<groupId>org.springframework</groupId>
