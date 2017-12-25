@@ -44,7 +44,7 @@ public class SpringMvcTest {
 	@Test
 	public void testPage() throws Exception {
 //		模拟请求得到返回值 
-		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/emps").param("pn", "6")).andReturn();
+		MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/emps").param("pn", "1")).andReturn();
 		
 //		请求成功后，请求域中会有pageInfo
 		PageInfo<Employee> pageInfo  =(PageInfo<Employee>) result.getRequest().getAttribute("pageInfo");
@@ -59,7 +59,7 @@ public class SpringMvcTest {
 		System.out.println();
 		List<Employee> emps = pageInfo.getList();
 		for (Employee employee : emps) {
-			System.out.println(employee.getEmpName());
+			System.out.println(employee.getDept().getDeptName()+employee.getEmpName());
 		}
 	}
 }
