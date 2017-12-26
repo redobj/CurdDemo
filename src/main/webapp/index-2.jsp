@@ -20,9 +20,10 @@
 	rel="stylesheet">
 <title>员工列表</title>
 <style type="text/css">
-button{
+button {
 	margin: 2px
 }
+
 td {
 	text-align: center;
 }
@@ -56,15 +57,15 @@ th {
 		<div class="row">
 			<div class="col-md-8 col-md-offset-2">
 				<table class="table table-striped" id="empsT">
-				<thead>
-					<tr>
-						<th>#</th>
-						<th><span class="glyphicon glyphicon-user"></span> 姓名</th>
-						<th><span class="glyphicon glyphicon-inbox"></span> 性别</th>
-						<th><span class="glyphicon glyphicon-envelope"></span> 邮箱</th>
-						<th><span class="glyphicon glyphicon-tint"></span> 部门</th>
-						<th><span class="glyphicon glyphicon-cog"></span> 操作</th>
-					</tr>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th><span class="glyphicon glyphicon-user"></span> 姓名</th>
+							<th><span class="glyphicon glyphicon-inbox"></span> 性别</th>
+							<th><span class="glyphicon glyphicon-envelope"></span> 邮箱</th>
+							<th><span class="glyphicon glyphicon-tint"></span> 部门</th>
+							<th><span class="glyphicon glyphicon-cog"></span> 操作</th>
+						</tr>
 					</thead>
 					<tbody>
 					</tbody>
@@ -74,43 +75,12 @@ th {
 
 		<!-- 分页条 -->
 		<div class="row" align="center">
-			<div class="col-md-6 col-md-offset-4">
-				<nav aria-label="Page navigation">
-				<ul class="pagination">
-					<li><a href="${APP_PATH}/emps?pn=1">首页</a></li>
-					<c:if test="${pageInfo.hasPreviousPage }">
-						<li><a href="${APP_PATH}/emps?pn=${pageInfo.pageNum-1}"
-							aria-label="Previous"> <span aria-hidden="true">&laquo;</span>
-						</a></li>
-					</c:if>
-					<c:forEach items="${pageInfo.navigatepageNums}" var="nav">
-						<c:if test="${nav == pageInfo.pageNum}">
-							<li class="active"><a href="${APP_PATH}/emps?pn=${nav}">${nav}</a></li>
-						</c:if>
-						<c:if test="${nav != pageInfo.pageNum}">
-							<li><a href="${APP_PATH}/emps?pn=${nav}">${nav}</a></li>
-						</c:if>
-
-					</c:forEach>
-					<c:if test="${pageInfo.hasNextPage }">
-						<li><a href="${APP_PATH}/emps?pn=${pageInfo.pageNum+1}"
-							aria-label="Next"> <span aria-hidden="true">&raquo;</span>
-						</a></li>
-					</c:if>
-					<li><a href="${APP_PATH}/emps?pn=${pageInfo.pages}">末页</a></li>
-				</ul>
-				</nav>
-			</div>
+			<div class="col-md-6 col-md-offset-4" id="nav_area"></div>
 		</div>
 
 		<!-- 分页信息 -->
 		<div class="row" align="center">
-			<div class="col-md-6 col-md-offset-4">
-				<small style="margin-right: 10px; color: gray">
-					当前页：${pageInfo.pageNum } 总页数：${pageInfo.pages }
-					总记录数：${pageInfo.total } 
-				</small>
-			</div>
+			<div class="col-md-6 col-md-offset-4" id="nav_info"></div>
 		</div>
 	</div>
 </body>
@@ -118,48 +88,90 @@ th {
 <script src="${APP_PATH}/Static/bootstrap/js/bootstrap.min.js"></script>
 <script type="text/javascript">
 	/* 1、页面加载完成后，直接去发送一个ajax请求，得到数据 */
-	$(function(){
+	$(function() {
 		$.ajax({
-			url:"${APP_PATH}/emps",
-			data:"pn=1",
-			type:"GET",
-			success:function(result){
+			url : "${APP_PATH}/emps",
+			data : "pn=1",
+			type : "GET",
+			success : function(result) {
 				/* console.log(result); */
 				/* 1、解析并显示员工数据 */
 				build_emps_table(result)
 				/* 2、解析并显示分页信息 */
+				build_page_nav_info(result);
+				/* 3、解析显示分页条 */
+				build_page_nav(result);
 			}
 		});
 	});
-	
-	function build_emps_table(result){
+
+	function build_emps_table(result) {
 		var emps = result.extend.pageInfo.list;
-		$.each(emps,function(index,item){
+		$.each(emps, function(index, item) {
 			var empIdTd = $("<td></td>").append(item.empId);
 			var empNameTd = $("<td></td>").append(item.empId);
-			var genderTd = $("<td></td>").append(item.gender=='M'?'男':'女');
-			var emailTd= $("<td></td>").append(item.email);
-			var deptNameTd = $("<td></td>").append(item.dept.deptName); 
-			var editBtn=$("<button></button>").addClass("btn btn-primary btn-sm")
-							.append("<span></span>").addClass("glyphicon glyphicon-pencil").append("编辑");
-			var delBtn=$("<button></button>").addClass("btn btn-danger btn-sm")
-			.append("<span></span>").addClass("glyphicon glyphicon-trash").append("删除");
+			var genderTd = $("<td></td>")
+					.append(item.gender == 'M' ? '男' : '女');
+			var emailTd = $("<td></td>").append(item.email);
+			var deptNameTd = $("<td></td>").append(item.dept.deptName);
+			var editBtn = $("<button></button>").addClass(
+					"btn btn-primary btn-sm").append("<span></span>").addClass(
+					"glyphicon glyphicon-pencil").append("编辑");
+			var delBtn = $("<button></button>").addClass(
+					"btn btn-danger btn-sm").append("<span></span>").addClass(
+					"glyphicon glyphicon-trash").append("删除");
 			var btnM = $("<td></td>").append(editBtn).append(delBtn);
-			$("<tr></tr>")
-			.append(empIdTd)
-			.append(empNameTd)
-			.append(genderTd)
-			.append(emailTd)
-			.append(deptNameTd)
-			.append(btnM)
-			.appendTo("#empsT tbody")
-			;
+			$("<tr></tr>").append(empIdTd).append(empNameTd).append(genderTd)
+					.append(emailTd).append(deptNameTd).append(btnM).appendTo(
+							"#empsT tbody");
 		});
 	}
-	
-	function build_page_nav(result){
-		
+
+	function build_page_nav_info(result) {
+		var navInfo = $("<small></small>").css({
+			"margin-right" : "10px",
+			"color" : "gray"
+		}).append(
+				"当前页：" + result.extend.pageInfo.pageNum + " 总页数："
+						+ result.extend.pageInfo.pages + " 总记录数："
+						+ result.extend.pageInfo.total);
+		$("#nav_info").append(navInfo);
 	}
-	
+
+	function build_page_nav(result) {
+		var firstPageLi = $("<li></li>").append($("<a></a>").attr({
+			"href" : "#"
+		}).append("首页"));
+		var lastPageLi = $("<li></li>").append($("<a></a>").attr({
+			"href" : "#"
+		}).append("末页"));
+		var previousLi = $("<li></li>").append($("<a></a>").attr({
+			"href" : "#"
+		}).append("&laquo; 上一页"));
+		var nextLi = $("<li></li>").append($("<a></a>").attr({
+			"href" : "#"
+		}).append("下一页 &raquo;"));
+		var pn = result.extend.pageInfo.navigatepageNums;
+		var ul = $("<ul></ul>").addClass("pagination");
+		/* 添加首页和上一页 */
+		ul.append(firstPageLi).append(previousLi);
+		/* 1、2、3... */
+		$.each(pn, function(index, item) {
+			if (item == result.extend.pageInfo.pageNum) {
+				var tempLi = $("<li></li>").addClass("active").append(
+						$("<a></a>").attr({
+							"href" : "#"
+						}).append(item));
+			} else {
+				var tempLi = $("<li></li>").append($("<a></a>").attr({
+					"href" : "#"
+				}).append(item));
+			}
+			ul.append(tempLi);
+		});
+		/* 添加下一页和末页 */
+		ul.append(nextLi).append(lastPageLi);
+		$("#nav_area").append($("<nav></nav>").append(ul));
+	}
 </script>
 </html>
