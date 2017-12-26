@@ -34,6 +34,64 @@ th {
 </style>
 </head>
 <body>
+	<!-- Modal -->
+	<div class="modal fade" id="addModal" tabindex="-1" role="dialog"
+		aria-labelledby="myModalLabel">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"
+						aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="myModalLabel">员工添加</h4>
+				</div>
+				<div class="modal-body">
+					<form class="form-horizontal">
+						<div class="form-group">
+							<label class="col-sm-2 control-label">姓名</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="empName_input"
+									name="empName" placeholder="Employee Name">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">邮箱</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="email_input"
+									placeholder="Email@redobj.com" name="email">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">性别</label>
+							<div class="col-sm-10">
+								<label class="radio-inline"> <input type="radio"
+									name="inlineRadioOptions" id="gender_radio1" value="M"
+									name="gender" checked="checked"> 男
+								</label> <label class="radio-inline"> <input type="radio"
+									name="inlineRadioOptions" id="gender_radio2" value="W"
+									name="gender"> 女
+								</label>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">所属部门</label>
+							<div class="col-sm-6">
+								<select class="form-control " name="dId" id="dept">
+								</select>
+							</div>
+						</div>
+					</form>
+
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+					<button type="button" class="btn btn-primary">保存</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<!-- 搭建显示页面 -->
 	<div class="container">
 		<!-- 标题 -->
@@ -49,8 +107,8 @@ th {
 		<div class="row">
 			<div class="col-md-3 col-md-offset-8"
 				style="margin-top: 20px; margin-bottom: 20px">
-				<button class="btn btn-primary">新增</button>
-				<button class="btn btn-danger">删除</button>
+				<button class="btn btn-primary" id="add_btn">新增</button>
+				<button class="btn btn-danger" id="del_btn">删除</button>
 			</div>
 		</div>
 		<!-- 表格 -->
@@ -87,6 +145,34 @@ th {
 <script src="${APP_PATH}/Static/js/jquery.min.js"></script>
 <script src="${APP_PATH}/Static/bootstrap/js/bootstrap.min.js"></script>
 <script type="text/javascript">
+	$("#add_btn").click(function() {
+	/* 点击新增按钮弹出模态框 */
+		$("#addModal").modal({
+			backdrop : 'static'
+		});
+	/* 发送ajax请求获得部门信息 */
+		$.ajax({
+			url:"${APP_PATH}/depts",
+			type:"GET",
+			success:function(result){
+				/* console.log(result); */
+				setDepts(result);
+			}
+		});
+	});
+	
+	/* 设置部门信息 */
+	function setDepts(result){
+		/* 清空信息 */
+		$("#dept").empty();
+		$.each(result.extend.deptsInfo,function(){
+			var temp = $("<option></option>").attr({
+				"value":this.deptId
+			}).append(this.deptName);
+			$("#dept").append(temp);
+		});
+	}
+
 	/* 1、页面加载完成后，直接去发送一个ajax请求，得到数据 */
 	$(function() {
 		to_page(1);
@@ -98,7 +184,7 @@ th {
 		var emps = result.extend.pageInfo.list;
 		$.each(emps, function(index, item) {
 			var empIdTd = $("<td></td>").append(item.empId);
-			var empNameTd = $("<td></td>").append(item.empId);
+			var empNameTd = $("<td></td>").append(item.empName);
 			var genderTd = $("<td></td>")
 					.append(item.gender == 'M' ? '男' : '女');
 			var emailTd = $("<td></td>").append(item.email);
@@ -134,21 +220,24 @@ th {
 		$("#nav_area").empty();
 		var firstPageLi = $("<li></li>").append($("<a></a>").append("首页"));
 		var lastPageLi = $("<li></li>").append($("<a></a>").append("末页"));
-		var previousLi = $("<li></li>").append($("<a></a>").append("&laquo; 上一页"));
+		var previousLi = $("<li></li>").append(
+				$("<a></a>").append("&laquo; 上一页"));
 		var nextLi = $("<li></li>").append($("<a></a>").append("下一页 &raquo;"));
 		var pn = result.extend.pageInfo.navigatepageNums;
 		var ul = $("<ul></ul>").addClass("pagination");
 		/* 添加首页和上一页 */
-		if(result.extend.pageInfo.hasPreviousPage==false){
+		if (result.extend.pageInfo.hasPreviousPage == false) {
 			firstPageLi.addClass("disabled");
 			previousLi.addClass("disabled");
-		}else{
-			firstPageLi.click(function(){
+		} else {
+			firstPageLi.click(function() {
 				to_page(1);
 			});
-			previousLi.click(function(){to_page(result.extend.pageInfo.pageNum-1)});
+			previousLi.click(function() {
+				to_page(result.extend.pageInfo.pageNum - 1)
+			});
 		}
-		
+
 		ul.append(firstPageLi).append(previousLi);
 		/* 1、2、3... */
 		$.each(pn, function(index, item) {
@@ -156,34 +245,35 @@ th {
 				var tempLi = $("<li></li>").addClass("active").append(
 						$("<a></a>").append(item));
 			} else {
-				var tempLi = $("<li></li>").append($("<a></a>").append(item)).click(function(){
-					to_page(item);
-				});
+				var tempLi = $("<li></li>").append($("<a></a>").append(item))
+						.click(function() {
+							to_page(item);
+						});
 			}
 			ul.append(tempLi);
 		});
 		/* 添加下一页和末页 */
-		if(result.extend.pageInfo.hasNextPage==false){
+		if (result.extend.pageInfo.hasNextPage == false) {
 			nextLi.addClass("disabled");
 			lastPageLi.addClass("disabled");
-		}else{
-			lastPageLi.click(function(){
+		} else {
+			lastPageLi.click(function() {
 				to_page(result.extend.pageInfo.pages);
 			});
-			
-			nextLi.click(function(){
-				to_page(result.extend.pageInfo.pageNum+1);
+
+			nextLi.click(function() {
+				to_page(result.extend.pageInfo.pageNum + 1);
 			});
 		}
 		ul.append(nextLi).append(lastPageLi);
 		$("#nav_area").append($("<nav></nav>").append(ul));
 	}
-	
+
 	/* 跳转方法 */
-	function to_page(pn){
+	function to_page(pn) {
 		$.ajax({
 			url : "${APP_PATH}/emps",
-			data : "pn="+pn,
+			data : "pn=" + pn,
 			type : "GET",
 			success : function(result) {
 				/* console.log(result); */
