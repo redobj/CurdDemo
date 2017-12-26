@@ -13,6 +13,8 @@
   	<plugins>
     <!-- com.github.pagehelper为PageHelper类所在包名 -->
     <plugin interceptor="com.github.pagehelper.PageInterceptor">
+    <!-- 合理化参数 -->
+    		<property name="reasonable" value="true" />
 	</plugin>
 </plugins>
   </configuration>

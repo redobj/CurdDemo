@@ -47,7 +47,7 @@ th {
 		</div>
 		<!-- 按钮 -->
 		<div class="row">
-			<div class="col-md-4 col-md-offset-8"
+			<div class="col-md-3 col-md-offset-8"
 				style="margin-top: 20px; margin-bottom: 20px">
 				<button class="btn btn-primary">新增</button>
 				<button class="btn btn-danger">删除</button>
@@ -55,7 +55,7 @@ th {
 		</div>
 		<!-- 表格 -->
 		<div class="row">
-			<div class="col-md-8 col-md-offset-2">
+			<div class="col-md-10 col-md-offset-1">
 				<table class="table table-striped" id="empsT">
 					<thead>
 						<tr>
@@ -75,12 +75,12 @@ th {
 
 		<!-- 分页条 -->
 		<div class="row" align="center">
-			<div class="col-md-6 col-md-offset-4" id="nav_area"></div>
+			<div class="col-md-8 col-md-offset-2" id="nav_area"></div>
 		</div>
 
 		<!-- 分页信息 -->
 		<div class="row" align="center">
-			<div class="col-md-6 col-md-offset-4" id="nav_info"></div>
+			<div class="col-md-8 col-md-offset-2" id="nav_info"></div>
 		</div>
 	</div>
 </body>
@@ -89,23 +89,12 @@ th {
 <script type="text/javascript">
 	/* 1、页面加载完成后，直接去发送一个ajax请求，得到数据 */
 	$(function() {
-		$.ajax({
-			url : "${APP_PATH}/emps",
-			data : "pn=1",
-			type : "GET",
-			success : function(result) {
-				/* console.log(result); */
-				/* 1、解析并显示员工数据 */
-				build_emps_table(result)
-				/* 2、解析并显示分页信息 */
-				build_page_nav_info(result);
-				/* 3、解析显示分页条 */
-				build_page_nav(result);
-			}
-		});
+		to_page(1);
 	});
 
 	function build_emps_table(result) {
+		/* 清空表格信息 */
+		$("#empsT tbody").empty();
 		var emps = result.extend.pageInfo.list;
 		$.each(emps, function(index, item) {
 			var empIdTd = $("<td></td>").append(item.empId);
@@ -128,6 +117,8 @@ th {
 	}
 
 	function build_page_nav_info(result) {
+		/* 清空分页信息 */
+		$("#nav_info").empty();
 		var navInfo = $("<small></small>").css({
 			"margin-right" : "10px",
 			"color" : "gray"
@@ -139,39 +130,71 @@ th {
 	}
 
 	function build_page_nav(result) {
-		var firstPageLi = $("<li></li>").append($("<a></a>").attr({
-			"href" : "#"
-		}).append("首页"));
-		var lastPageLi = $("<li></li>").append($("<a></a>").attr({
-			"href" : "#"
-		}).append("末页"));
-		var previousLi = $("<li></li>").append($("<a></a>").attr({
-			"href" : "#"
-		}).append("&laquo; 上一页"));
-		var nextLi = $("<li></li>").append($("<a></a>").attr({
-			"href" : "#"
-		}).append("下一页 &raquo;"));
+		/* 清空分页条 */
+		$("#nav_area").empty();
+		var firstPageLi = $("<li></li>").append($("<a></a>").append("首页"));
+		var lastPageLi = $("<li></li>").append($("<a></a>").append("末页"));
+		var previousLi = $("<li></li>").append($("<a></a>").append("&laquo; 上一页"));
+		var nextLi = $("<li></li>").append($("<a></a>").append("下一页 &raquo;"));
 		var pn = result.extend.pageInfo.navigatepageNums;
 		var ul = $("<ul></ul>").addClass("pagination");
 		/* 添加首页和上一页 */
+		if(result.extend.pageInfo.hasPreviousPage==false){
+			firstPageLi.addClass("disabled");
+			previousLi.addClass("disabled");
+		}else{
+			firstPageLi.click(function(){
+				to_page(1);
+			});
+			previousLi.click(function(){to_page(result.extend.pageInfo.pageNum-1)});
+		}
+		
 		ul.append(firstPageLi).append(previousLi);
 		/* 1、2、3... */
 		$.each(pn, function(index, item) {
 			if (item == result.extend.pageInfo.pageNum) {
 				var tempLi = $("<li></li>").addClass("active").append(
-						$("<a></a>").attr({
-							"href" : "#"
-						}).append(item));
+						$("<a></a>").append(item));
 			} else {
-				var tempLi = $("<li></li>").append($("<a></a>").attr({
-					"href" : "#"
-				}).append(item));
+				var tempLi = $("<li></li>").append($("<a></a>").append(item)).click(function(){
+					to_page(item);
+				});
 			}
 			ul.append(tempLi);
 		});
 		/* 添加下一页和末页 */
+		if(result.extend.pageInfo.hasNextPage==false){
+			nextLi.addClass("disabled");
+			lastPageLi.addClass("disabled");
+		}else{
+			lastPageLi.click(function(){
+				to_page(result.extend.pageInfo.pages);
+			});
+			
+			nextLi.click(function(){
+				to_page(result.extend.pageInfo.pageNum+1);
+			});
+		}
 		ul.append(nextLi).append(lastPageLi);
 		$("#nav_area").append($("<nav></nav>").append(ul));
+	}
+	
+	/* 跳转方法 */
+	function to_page(pn){
+		$.ajax({
+			url : "${APP_PATH}/emps",
+			data : "pn="+pn,
+			type : "GET",
+			success : function(result) {
+				/* console.log(result); */
+				/* 1、解析并显示员工数据 */
+				build_emps_table(result)
+				/* 2、解析并显示分页信息 */
+				build_page_nav_info(result);
+				/* 3、解析显示分页条 */
+				build_page_nav(result);
+			}
+		});
 	}
 </script>
 </html>
