@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -57,4 +58,40 @@ public class EmployeeController {
 		PageInfo<Employee> page = new PageInfo<Employee>(emps,5);
 		return Msg.success().add("pageInfo", page);
 	}
+	
+	
+	/**
+	 * 插入员工
+	 * @param emp Spring根据表单自动封装的Employee对象
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value="emp",method=RequestMethod.POST)
+	public Msg insertEmp(Employee emp) {
+		employeeService.insertService(emp);
+		return Msg.success();
+	}
+	
+	
+	/**
+	 * 检测用户名是否重复
+	 * @param username
+	 * @return 
+	 */
+	@ResponseBody
+	@RequestMapping("/checkUser")
+	public Msg checkUser(String username) {
+		//先判断用户名是否合法
+		String regx = "(^[A-Za-z0-9-]{3,16}$)|(^[\\u2E80-\\u9FFF]{2,5}$)";
+		if(!username.matches(regx)) {
+			return Msg.fail().add("va_msg", "* 请输入真实姓名 3-16位全英文字符或2-5位全中文字符");
+		}
+		if(employeeService.checkUser(username)) {
+			return Msg.success().add("va_msg", "✅ 用户名可用");
+		}else {
+			return Msg.fail().add("va_msg", " 用户名已被使用");
+		}
+		
+	}
+	
 }
