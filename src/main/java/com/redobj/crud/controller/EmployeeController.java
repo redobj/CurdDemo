@@ -1,10 +1,16 @@
 package com.redobj.crud.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -62,14 +68,26 @@ public class EmployeeController {
 	
 	/**
 	 * 插入员工
+	 * 1、支持JSR303校验
+	 * 2、导入Hibernate-Validator
 	 * @param emp Spring根据表单自动封装的Employee对象
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping(value="emp",method=RequestMethod.POST)
-	public Msg insertEmp(Employee emp) {
-		employeeService.insertService(emp);
-		return Msg.success();
+	public Msg insertEmp(@Valid Employee emp,BindingResult result) {
+		if(result.hasErrors()) {
+//			校验失败，返回失败信息
+			Map<String,Object> maps = new HashMap<String,Object>();
+			List<FieldError> errors = result.getFieldErrors();
+			for (FieldError fieldError : errors) {
+				maps.put(fieldError.getField(), fieldError.getDefaultMessage());
+			}
+			return Msg.fail().add("fieldError", maps);
+		}else {
+			employeeService.insertService(emp);
+			return Msg.success();
+		}
 	}
 	
 	

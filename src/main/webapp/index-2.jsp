@@ -160,7 +160,7 @@ th {
 		/* reset()方法是DOM对象的方法 */
 		$("#addForm")[0].reset();
 		$("#addModal input").removeAttr("ajax-va");
-		$("#addModal").find("help-block").empty();
+		$("#addModal").find(".help-block").empty();
 		$("#addModal form div").removeClass("has-success has-error");
 		/* 点击新增按钮弹出模态框 */
 		$("#addModal").modal({
@@ -195,9 +195,9 @@ th {
 	/* 模态框中的内容发送给服务器保存 */
 	$("#saveBtn").click(function() {
 		/* 数据校验 */
-		if (regx_data() == false) {
+		 if (regx_data() == false) {
 			return;
-		}
+		} 
 
 		//防止数据为改变不触发ajax
 		if ($("#empName_input").attr("ajax-va") == "fail") {
@@ -211,12 +211,23 @@ th {
 			/* 使用JQuery封装的方法提取表单数据*/
 			data : $("#addModal form").serialize(),
 			success : function(result) {
-				alert(result.msg);
-				/* 1、关闭模态框 */
-				$('#addModal').modal('hide');
-				/* 2、跳转到末页 */
-				/* 传入很大的数字比如总记录数，利用PageInfo的reasonable合理化参数属性使其跳转到最后一页 */
-				to_page(totalRec);
+				if(result.code == 100){
+					alert(result.msg);
+					/* 1、关闭模态框 */
+					$('#addModal').modal('hide');
+					/* 2、跳转到末页 */
+					/* 传入很大的数字比如总记录数，利用PageInfo的reasonable合理化参数属性使其跳转到最后一页 */
+					to_page(totalRec);
+				}
+				if(result.code == 200){
+					if(result.extend.fieldError.empName){
+						show_msg($("#empName_input"),false,result.extend.fieldError.empName);
+					}
+					if(result.extend.fieldError.email){
+						show_msg($("#email_input"),false,result.extend.fieldError.email);
+					}
+					
+				}
 			}
 		});
 	});

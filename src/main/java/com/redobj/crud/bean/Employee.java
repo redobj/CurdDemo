@@ -1,12 +1,16 @@
 package com.redobj.crud.bean;
 
+import javax.validation.constraints.Pattern;
+
+import org.hibernate.validator.constraints.Email;
+
 public class Employee {
     private Integer empId;
-
+    @Pattern(regexp="(^[A-Za-z0-9-]{3,16}$)|(^[\\u2E80-\\u9FFF]{2,5}$)",message=" 非法的用户名")
     private String empName;
 
     private String gender;
-
+    @Email(message=" 非法的邮箱格式")
     private String email;
 
     private Integer dId;
