@@ -34,7 +34,7 @@ th {
 </style>
 </head>
 <body>
-	<!-- Modal -->
+	<!-- 员工添加Modal -->
 	<div class="modal fade" id="addModal" tabindex="-1" role="dialog"
 		aria-labelledby="myModalLabel">
 		<div class="modal-dialog" role="document">
@@ -93,6 +93,66 @@ th {
 			</div>
 		</div>
 	</div>
+	
+		<!-- 员工修改Modal -->
+	<div class="modal fade" id="updateModal" tabindex="-1" role="dialog"
+		aria-labelledby="myModalLabel">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"
+						aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title">员工更改</h4>
+				</div>
+				<div class="modal-body">
+					<form class="form-horizontal" id="updateForm">
+						<div class="form-group">
+							<label class="col-sm-2 control-label">姓名</label>
+							<div class="col-sm-10">
+								<p type="text" class="form-control-static" id="empName_static"
+									 placeholder="Employee Name">1</p> <small
+									class="help-block"> * 请输入真实姓名 3-16位全英文字符或2-5位全中文字符</small>
+							</div>
+
+						</div>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">邮箱</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="email_update"
+									placeholder="Email@redobj.com" name="email"> <small
+									class="help-block"> * 请输入正确的邮箱格式 employee@redobj.com</small>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">性别</label>
+							<div class="col-sm-10">
+								<label class="radio-inline"> <input type="radio"
+									value="M" name="gender" checked="checked">
+									男
+								</label> <label class="radio-inline"> <input type="radio"
+									value="W" name="gender"> 女
+								</label>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">所属部门</label>
+							<div class="col-sm-6">
+								<select class="form-control " name="dId" id="dept">
+								</select>
+							</div>
+						</div>
+					</form>
+
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+					<button type="button" class="btn btn-primary" id="updateBtn">更新</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
 	<!-- 搭建显示页面 -->
 	<div class="container">
@@ -147,14 +207,52 @@ th {
 <script src="${APP_PATH}/Static/js/jquery.min.js"></script>
 <script src="${APP_PATH}/Static/bootstrap/js/bootstrap.min.js"></script>
 <script type="text/javascript">
-	//总记录数
-	var totalRec;
+	//总记录数,当前页码
+	var totalRec,currentPage;
 
 	/* 1、页面加载完成后，直接去发送一个ajax请求，得到数据 */
 	$(function() {
 		to_page(1);
 	});
-
+	
+	/* 由于更改的按钮是后来增加的，所以不能直接绑定click事件 */
+	/* 1.7+ 替代 live */
+	$(document).on("click",".editBtn",function(){
+		$("#updateForm")[0].reset();
+		$("#updateModal input").removeAttr("ajax-va_update");
+		$("#updateModal").find(".help-block").empty();
+		$("#updateModal form div").removeClass("has-success has-error");
+		/* 查询部门信息 */
+		setDepts("#updateModal #dept");
+		/* 查询员工信息 */
+		getEmp($(this).attr("empId"));
+		$("#updateModal #updateBtn").attr("empId",$(this).attr("empId"));
+		$("#updateModal").modal({
+			backdrop : 'static'
+		});
+	})
+	
+	/* 点击更新更新员工 */
+	$("#updateModal #updateBtn").click(function(){
+		//验证邮箱是否合法
+		/* 发送员工信息更新 */
+		$.ajax({
+			url:"${APP_PATH}/emp/"+$(this).attr("empid"),
+			/* data:	$("#updateModal form").serialize()+"&_method=PUT",
+			type:"POST", */
+			data:$("#updateModal form").serialize(),
+			type:"PUT",
+			success : function(result) {
+				/* alert(result); */
+					/* 1、关闭模态框 */
+					$("#updateModal").modal("hide");
+					/* 2、回到本页面 */
+					to_page(currentPage);
+			}
+		})
+	});
+	
+	
 	$("#add_btn").click(function() {
 		/* 清除表单数据 */
 		/* reset()方法是DOM对象的方法 */
@@ -162,18 +260,9 @@ th {
 		$("#addModal input").removeAttr("ajax-va");
 		$("#addModal").find(".help-block").empty();
 		$("#addModal form div").removeClass("has-success has-error");
-		/* 点击新增按钮弹出模态框 */
+		setDepts("#addModal #dept");
 		$("#addModal").modal({
 			backdrop : 'static'
-		});
-		/* 发送ajax请求获得部门信息 */
-		$.ajax({
-			url : "${APP_PATH}/depts",
-			type : "GET",
-			success : function(result) {
-				/* console.log(result); */
-				setDepts(result);
-			}
 		});
 	});
 
@@ -195,9 +284,9 @@ th {
 	/* 模态框中的内容发送给服务器保存 */
 	$("#saveBtn").click(function() {
 		/* 数据校验 */
-		 if (regx_data() == false) {
+		/*  if (regx_data() == false) {
 			return;
-		} 
+		}  */
 
 		//防止数据为改变不触发ajax
 		if ($("#empName_input").attr("ajax-va") == "fail") {
@@ -231,6 +320,24 @@ th {
 			}
 		});
 	});
+	
+	/* 取得员工信息 */
+	function getEmp(id){
+		$.ajax({
+			url:"${APP_PATH}/emp/"+id,
+			type:"GET",
+			success:function(result){
+				if(result.code==100){
+					$("#updateModal #empName_static").text(result.extend.emp.empName);
+					$("#updateModal #email_update").val(result.extend.emp.email);
+					$("#updateModal input[name=gender]").val([result.extend.emp.gender]);
+					$("#updateModal select").val([result.extend.emp.dId]);
+					
+				}
+			}
+			
+		})
+	}
 
 	/* ajax检测用户名 */
 	function username_check() {
@@ -259,7 +366,8 @@ th {
 	function regx_data() {
 		var regx_name = /(^[A-Za-z0-9-]{3,16}$)|(^[\u2E80-\u9FFF]{2,5}$)/;
 		var regx_email = /^([A-Za-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/;
-		if ($("#empName_input").attr("ajax_va")=="success"
+		if (regx_select($("#empName_input"), regx_name,
+		" * 请输入真实姓名 3-16位全英文字符或2-5位全中文字符") 
 				&& regx_select($("#email_input"), regx_email,
 						"* 请输入正确的邮箱格式 employee@redobj.com")) {
 			return true;
@@ -293,15 +401,24 @@ th {
 	}
 
 	/* 设置部门信息 */
-	function setDepts(result) {
-		/* 清空信息 */
-		$("#dept").empty();
-		$.each(result.extend.deptsInfo, function() {
-			var temp = $("<option></option>").attr({
-				"value" : this.deptId
-			}).append(this.deptName);
-			$("#dept").append(temp);
+	function setDepts(ele) {
+		/* 发送ajax请求获得部门信息 */
+		$.ajax({
+			url : "${APP_PATH}/depts",
+			type : "GET",
+			success : function(result) {
+				/* console.log(result); */
+				/* 清空信息 */
+				$(ele).empty();
+				$.each(result.extend.deptsInfo, function() {
+					var temp = $("<option></option>").attr({
+						"value" : this.deptId
+					}).append(this.deptName);
+					$(ele).append(temp);
+				});
+			}
 		});
+		
 	}
 
 	function build_emps_table(result) {
@@ -316,11 +433,11 @@ th {
 			var emailTd = $("<td></td>").append(item.email);
 			var deptNameTd = $("<td></td>").append(item.dept.deptName);
 			var editBtn = $("<button></button>").addClass(
-					"btn btn-primary btn-sm").append("<span></span>").addClass(
-					"glyphicon glyphicon-pencil").append("编辑");
+					"btn btn-primary btn-sm editBtn").append("<span></span>").addClass(
+					"glyphicon glyphicon-pencil").append("编辑").attr("empId",item.empId);
 			var delBtn = $("<button></button>").addClass(
-					"btn btn-danger btn-sm").append("<span></span>").addClass(
-					"glyphicon glyphicon-trash").append("删除");
+					"btn btn-danger btn-sm delBtn").append("<span></span>").addClass(
+					"glyphicon glyphicon-trash").append("删除").attr("empId",item.empId);
 			var btnM = $("<td></td>").append(editBtn).append(delBtn);
 			$("<tr></tr>").append(empIdTd).append(empNameTd).append(genderTd)
 					.append(emailTd).append(deptNameTd).append(btnM).appendTo(
@@ -339,6 +456,7 @@ th {
 						+ result.extend.pageInfo.pages + " 总记录数："
 						+ result.extend.pageInfo.total);
 		$("#nav_info").append(navInfo);
+		currentPage = result.extend.pageInfo.pageNum;
 	}
 
 	function build_page_nav(result) {

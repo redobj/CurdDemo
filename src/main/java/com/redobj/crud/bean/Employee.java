@@ -10,7 +10,8 @@ public class Employee {
     private String empName;
 
     private String gender;
-    @Email(message=" 非法的邮箱格式")
+//    @Email(message=" 非法的邮箱格式")
+    @Pattern(regexp="^([A-Za-z0-9_\\.-]+)@([\\da-z\\.-]+)\\.([a-z\\.]{2,6})$",message=" 非法的邮箱格式")
     private String email;
 
     private Integer dId;

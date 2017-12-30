@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -67,6 +68,47 @@ public class EmployeeController {
 	
 	
 	/**
+	 * 根据id查询单个员工
+	 */
+	@ResponseBody
+	@RequestMapping(value="/emp/{id}",method=RequestMethod.GET)
+	public  Msg getEmp(@PathVariable("id")Integer id) {
+		Employee employee = employeeService.getEmp(id);
+		if(employee!=null) {			
+			return Msg.success().add("emp", employee);
+		}else {
+			return Msg.fail();
+		}
+	}
+	
+	/**
+	 * 用Ajax直接发送PUT请求引发的血案
+	 * 请求体中有数据，但是Employee无法封装
+	 * 原因：
+	 * 		Tomcat ：
+	 * 				1、将请求体中的数据封装为map	
+	 * 				2、SpringMVC封装POJO对象是，会把每个对象的值调用request.getParameter()获取
+	 * 		Tomcat检测到是PUT请求后不会进行封装map，只有POST请求才封装请求体
+	 * 
+	 * 要支持PUT请求，还需要封装PUT请求中的数据
+	 * 1、配置上HttpPutFormContentFilter
+	 * 2、将请求体的解析封装成Map
+	 * 3、request被重新包装，重写request.getParameter()方法被重写，就会从自己的封装的map中取值
+	 * 
+	 * 根据id修改员工
+	 * @param id
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value="/emp/{empId}",method=RequestMethod.PUT)
+	public Msg updateEmp(Employee employee) {
+		System.out.println(employee.getEmail());
+		employeeService.updateEmp(employee);
+		return Msg.success();
+	}
+	
+	
+	/**
 	 * 插入员工
 	 * 1、支持JSR303校验
 	 * 2、导入Hibernate-Validator
@@ -85,8 +127,13 @@ public class EmployeeController {
 			}
 			return Msg.fail().add("fieldError", maps);
 		}else {
-			employeeService.insertService(emp);
-			return Msg.success();
+			if(employeeService.checkUser(emp.getEmpName())) {
+				
+				employeeService.insertService(emp);
+				return Msg.success();
+			}else {
+				return Msg.fail().add("fieldError","用户名已被使用");
+			}
 		}
 	}
 	
