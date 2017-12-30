@@ -1,5 +1,6 @@
 package com.redobj.crud.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -159,4 +160,27 @@ public class EmployeeController {
 		
 	}
 	
+	/**
+	 * 单个批量员工二合一删除
+	 * 批量删除：1-2-3
+	 * 单个：1
+	 * @param id
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value="/emp/{ids}",method=RequestMethod.DELETE)
+	public Msg deleteFromId(@PathVariable("ids")String ids) {
+		if(ids.contains("-")) {
+			String[] str_ids = ids.split("-");
+			List<Integer> list_ids = new ArrayList<Integer>();
+			for (String id: str_ids) {
+				list_ids.add(Integer.parseInt(id));
+			}
+			employeeService.deleteBetch(list_ids);
+			return Msg.success();
+		}else {
+			employeeService.deleteFromId(Integer.parseInt(ids));
+			return Msg.success();
+		}
+	}
 }

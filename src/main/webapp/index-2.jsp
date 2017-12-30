@@ -93,8 +93,8 @@ th {
 			</div>
 		</div>
 	</div>
-	
-		<!-- 员工修改Modal -->
+
+	<!-- 员工修改Modal -->
 	<div class="modal fade" id="updateModal" tabindex="-1" role="dialog"
 		aria-labelledby="myModalLabel">
 		<div class="modal-dialog" role="document">
@@ -112,8 +112,9 @@ th {
 							<label class="col-sm-2 control-label">姓名</label>
 							<div class="col-sm-10">
 								<p type="text" class="form-control-static" id="empName_static"
-									 placeholder="Employee Name">1</p> <small
-									class="help-block"> * 请输入真实姓名 3-16位全英文字符或2-5位全中文字符</small>
+									placeholder="Employee Name">1</p>
+								<small class="help-block"> * 请输入真实姓名
+									3-16位全英文字符或2-5位全中文字符</small>
 							</div>
 
 						</div>
@@ -129,8 +130,7 @@ th {
 							<label class="col-sm-2 control-label">性别</label>
 							<div class="col-sm-10">
 								<label class="radio-inline"> <input type="radio"
-									value="M" name="gender" checked="checked">
-									男
+									value="M" name="gender" checked="checked"> 男
 								</label> <label class="radio-inline"> <input type="radio"
 									value="W" name="gender"> 女
 								</label>
@@ -170,7 +170,7 @@ th {
 			<div class="col-md-3 col-md-offset-8"
 				style="margin-top: 20px; margin-bottom: 20px">
 				<button class="btn btn-primary" id="add_btn">新增</button>
-				<button class="btn btn-danger" id="del_btn">删除</button>
+				<button class="btn btn-danger" id="del_all_btn">删除</button>
 			</div>
 		</div>
 		<!-- 表格 -->
@@ -179,6 +179,7 @@ th {
 				<table class="table table-striped" id="empsT">
 					<thead>
 						<tr>
+							<th><input type="checkbox" id="check_all"></th>
 							<th>#</th>
 							<th><span class="glyphicon glyphicon-user"></span> 姓名</th>
 							<th><span class="glyphicon glyphicon-inbox"></span> 性别</th>
@@ -208,16 +209,16 @@ th {
 <script src="${APP_PATH}/Static/bootstrap/js/bootstrap.min.js"></script>
 <script type="text/javascript">
 	//总记录数,当前页码
-	var totalRec,currentPage;
+	var totalRec, currentPage;
 
 	/* 1、页面加载完成后，直接去发送一个ajax请求，得到数据 */
 	$(function() {
 		to_page(1);
 	});
-	
+
 	/* 由于更改的按钮是后来增加的，所以不能直接绑定click事件 */
 	/* 1.7+ 替代 live */
-	$(document).on("click",".editBtn",function(){
+	$(document).on("click", ".editBtn", function() {
 		$("#updateForm")[0].reset();
 		$("#updateModal input").removeAttr("ajax-va_update");
 		$("#updateModal").find(".help-block").empty();
@@ -226,33 +227,50 @@ th {
 		setDepts("#updateModal #dept");
 		/* 查询员工信息 */
 		getEmp($(this).attr("empId"));
-		$("#updateModal #updateBtn").attr("empId",$(this).attr("empId"));
+		$("#updateModal #updateBtn").attr("empId", $(this).attr("empId"));
 		$("#updateModal").modal({
 			backdrop : 'static'
 		});
 	})
-	
+
 	/* 点击更新更新员工 */
-	$("#updateModal #updateBtn").click(function(){
+	$("#updateModal #updateBtn").click(function() {
 		//验证邮箱是否合法
 		/* 发送员工信息更新 */
 		$.ajax({
-			url:"${APP_PATH}/emp/"+$(this).attr("empid"),
+			url : "${APP_PATH}/emp/" + $(this).attr("empid"),
 			/* data:	$("#updateModal form").serialize()+"&_method=PUT",
 			type:"POST", */
-			data:$("#updateModal form").serialize(),
-			type:"PUT",
+			data : $("#updateModal form").serialize(),
+			type : "PUT",
 			success : function(result) {
 				/* alert(result); */
-					/* 1、关闭模态框 */
-					$("#updateModal").modal("hide");
-					/* 2、回到本页面 */
-					to_page(currentPage);
+				/* 1、关闭模态框 */
+				$("#updateModal").modal("hide");
+				/* 2、回到本页面 */
+				to_page(currentPage);
 			}
 		})
 	});
-	
-	
+
+	/* 发送删除单个员工请求 */
+	$(document).on(
+			"click",
+			".delBtn",
+			function() {
+				/* alert($(this).parents("tr:eq(0)").find("td:eq(1)").text()); */
+				if (confirm("确认删除员工[ "
+						+ $(this).parents("tr:eq(0)").find("td:eq(2)").text()
+						+ " ]吗？")) {
+					$.ajax({
+						url : "${APP_PATH}/emp/" + $(this).attr("empId"),
+						type : "DELETE",
+						success : function(result) {
+							to_page(currentPage);
+						}
+					});
+				}
+			});
 	$("#add_btn").click(function() {
 		/* 清除表单数据 */
 		/* reset()方法是DOM对象的方法 */
@@ -282,60 +300,107 @@ th {
 					});
 
 	/* 模态框中的内容发送给服务器保存 */
-	$("#saveBtn").click(function() {
-		/* 数据校验 */
-		/*  if (regx_data() == false) {
-			return;
-		}  */
+	$("#saveBtn").click(
+			function() {
+				/* 数据校验 */
+				/*  if (regx_data() == false) {
+					return;
+				}  */
 
-		//防止数据为改变不触发ajax
-		if ($("#empName_input").attr("ajax-va") == "fail") {
-			show_msg($("#empName_input"), false, " 用户名已被使用");
-			return false;
+				//防止数据为改变不触发ajax
+				if ($("#empName_input").attr("ajax-va") == "fail") {
+					show_msg($("#empName_input"), false, " 用户名已被使用");
+					return false;
+				}
+				/* alert($("#addModal form").serialize()); */
+				$.ajax({
+					url : "${APP_PATH}/emp",
+					type : "POST",
+					/* 使用JQuery封装的方法提取表单数据*/
+					data : $("#addModal form").serialize(),
+					success : function(result) {
+						if (result.code == 100) {
+							alert(result.msg);
+							/* 1、关闭模态框 */
+							$('#addModal').modal('hide');
+							/* 2、跳转到末页 */
+							/* 传入很大的数字比如总记录数，利用PageInfo的reasonable合理化参数属性使其跳转到最后一页 */
+							to_page(totalRec);
+						}
+						if (result.code == 200) {
+							if (result.extend.fieldError.empName) {
+								show_msg($("#empName_input"), false,
+										result.extend.fieldError.empName);
+							}
+							if (result.extend.fieldError.email) {
+								show_msg($("#email_input"), false,
+										result.extend.fieldError.email);
+							}
+
+						}
+					}
+				});
+			});
+	
+	/* 完成全选全不选*/
+	$("#check_all").click(function(){
+		if($(this).prop("checked")){			
+		$(".check_item").prop("checked",true);
+		} else{
+			$(".check_item").prop("checked",false);
 		}
-		/* alert($("#addModal form").serialize()); */
-		$.ajax({
-			url : "${APP_PATH}/emp",
-			type : "POST",
-			/* 使用JQuery封装的方法提取表单数据*/
-			data : $("#addModal form").serialize(),
-			success : function(result) {
-				if(result.code == 100){
-					alert(result.msg);
-					/* 1、关闭模态框 */
-					$('#addModal').modal('hide');
-					/* 2、跳转到末页 */
-					/* 传入很大的数字比如总记录数，利用PageInfo的reasonable合理化参数属性使其跳转到最后一页 */
-					to_page(totalRec);
-				}
-				if(result.code == 200){
-					if(result.extend.fieldError.empName){
-						show_msg($("#empName_input"),false,result.extend.fieldError.empName);
-					}
-					if(result.extend.fieldError.email){
-						show_msg($("#email_input"),false,result.extend.fieldError.email);
-					}
-					
-				}
-			}
+	});
+	
+	
+	$(document).on("click",".check_item",function(){
+		//判断当前选择中的元素是否满
+		var flag = $(".check_item:checked").length==$("tbody .check_item").length;	
+		$("#check_all").prop("checked",flag);
+	});
+	
+	/* 删除全部 */
+	$("#del_all_btn").click(function(){
+			var str = "你确认删除以下员工吗?\n";
+			var ids = "";
+		$.each($(".check_item:checked"),function(){
+			str+=$(this).parents("tr").find("td:eq(2)").text()+"\n";
+			ids+=$(this).parents("tr").find("td:eq(1)").text()+"-";
+			/* $(this).parents("tr").find("td:eq(1)").val()); */
 		});
+			str = str.substring(0,ids.length-2);
+			ids = ids.substring(0,ids.length-1);
+			if(confirm(str)){
+				/* 发送ajax请求 */
+				$.ajax({
+					url:"${APP_PATH}/emp/"+ids,
+					type:"DELETE",
+					success:function(result){
+						alert(result.msg)
+						to_page(currentPage);
+					}
+				})
+			}
+			
 	});
 	
 	/* 取得员工信息 */
-	function getEmp(id){
+	function getEmp(id) {
 		$.ajax({
-			url:"${APP_PATH}/emp/"+id,
-			type:"GET",
-			success:function(result){
-				if(result.code==100){
-					$("#updateModal #empName_static").text(result.extend.emp.empName);
-					$("#updateModal #email_update").val(result.extend.emp.email);
-					$("#updateModal input[name=gender]").val([result.extend.emp.gender]);
-					$("#updateModal select").val([result.extend.emp.dId]);
-					
+			url : "${APP_PATH}/emp/" + id,
+			type : "GET",
+			success : function(result) {
+				if (result.code == 100) {
+					$("#updateModal #empName_static").text(
+							result.extend.emp.empName);
+					$("#updateModal #email_update")
+							.val(result.extend.emp.email);
+					$("#updateModal input[name=gender]").val(
+							[ result.extend.emp.gender ]);
+					$("#updateModal select").val([ result.extend.emp.dId ]);
+
 				}
 			}
-			
+
 		})
 	}
 
@@ -367,7 +432,7 @@ th {
 		var regx_name = /(^[A-Za-z0-9-]{3,16}$)|(^[\u2E80-\u9FFF]{2,5}$)/;
 		var regx_email = /^([A-Za-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/;
 		if (regx_select($("#empName_input"), regx_name,
-		" * 请输入真实姓名 3-16位全英文字符或2-5位全中文字符") 
+				" * 请输入真实姓名 3-16位全英文字符或2-5位全中文字符")
 				&& regx_select($("#email_input"), regx_email,
 						"* 请输入正确的邮箱格式 employee@redobj.com")) {
 			return true;
@@ -418,31 +483,46 @@ th {
 				});
 			}
 		});
-		
+
 	}
+
+
+
+	
 
 	function build_emps_table(result) {
 		/* 清空表格信息 */
 		$("#empsT tbody").empty();
 		var emps = result.extend.pageInfo.list;
-		$.each(emps, function(index, item) {
-			var empIdTd = $("<td></td>").append(item.empId);
-			var empNameTd = $("<td></td>").append(item.empName);
-			var genderTd = $("<td></td>")
-					.append(item.gender == 'M' ? '男' : '女');
-			var emailTd = $("<td></td>").append(item.email);
-			var deptNameTd = $("<td></td>").append(item.dept.deptName);
-			var editBtn = $("<button></button>").addClass(
-					"btn btn-primary btn-sm editBtn").append("<span></span>").addClass(
-					"glyphicon glyphicon-pencil").append("编辑").attr("empId",item.empId);
-			var delBtn = $("<button></button>").addClass(
-					"btn btn-danger btn-sm delBtn").append("<span></span>").addClass(
-					"glyphicon glyphicon-trash").append("删除").attr("empId",item.empId);
-			var btnM = $("<td></td>").append(editBtn).append(delBtn);
-			$("<tr></tr>").append(empIdTd).append(empNameTd).append(genderTd)
-					.append(emailTd).append(deptNameTd).append(btnM).appendTo(
-							"#empsT tbody");
-		});
+		$
+				.each(
+						emps,
+						function(index, item) {
+							var checkBox = $("<td><input type='checkbox' class='check_item'></td>");
+							var empIdTd = $("<td></td>").append(item.empId);
+							var empNameTd = $("<td></td>").append(item.empName);
+							var genderTd = $("<td></td>").append(
+									item.gender == 'M' ? '男' : '女');
+							var emailTd = $("<td></td>").append(item.email);
+							var deptNameTd = $("<td></td>").append(
+									item.dept.deptName);
+							var editBtn = $("<button></button>").addClass(
+									"btn btn-primary btn-sm editBtn").append(
+									"<span></span>").addClass(
+									"glyphicon glyphicon-pencil").append("编辑")
+									.attr("empId", item.empId);
+							var delBtn = $("<button></button>").addClass(
+									"btn btn-danger btn-sm delBtn").append(
+									"<span></span>").addClass(
+									"glyphicon glyphicon-trash").append("删除")
+									.attr("empId", item.empId);
+							var btnM = $("<td></td>").append(editBtn).append(
+									delBtn);
+							$("<tr></tr>").append(checkBox).append(empIdTd)
+									.append(empNameTd).append(genderTd).append(
+											emailTd).append(deptNameTd).append(
+											btnM).appendTo("#empsT tbody");
+						});
 	}
 
 	function build_page_nav_info(result) {
